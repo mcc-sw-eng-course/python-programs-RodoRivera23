@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace SortMethod
 {
     public class Sort
     {
-        public void create_file(int cant)
+        public void create_file(int cant, int option)
         {
             var builder = new StringBuilder();
             Random rdm = new Random();
@@ -45,17 +44,17 @@ namespace SortMethod
                     }
                 }
 
-                Console.WriteLine("Se creo un archivo .txt en el escritorio del equipo llamado: unsorted_numbers.txt");
+                Console.WriteLine("\nSe creo un archivo .txt en el escritorio del equipo llamado: unsorted_numbers.txt");
                 
                 //Set up the data in the file
-                set_input_data(file_name);
+                set_input_data(file_name, option);
             }
             else
             {
                 Console.WriteLine("El numero debe ser mayor a 0");
             }
         }
-        public void set_input_data(string file_name)
+        public void set_input_data(string file_name, int option)
         {
             string line = "";
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
@@ -85,11 +84,52 @@ namespace SortMethod
             {
                 //add unsorted numbers separated by comma into list
                 unsortedNums = line.Split(',').Select(int.Parse).ToList();
-                
-                //add sort numbers into list
-                sortedNums = execute_merge_sort(unsortedNums);
 
-                set_up_data(sortedNums);
+                int[] unsortedArr = line.Split(',').Select(int.Parse).ToArray();
+
+
+                switch (option)
+                {
+                    case 1:
+                        //merge sort
+                        var watch1 = System.Diagnostics.Stopwatch.StartNew();
+                            sortedNums = execute_merge_sort(unsortedNums);
+                        watch1.Stop();
+                        
+                        var elapsedMs1 = watch1.ElapsedMilliseconds;
+                        Console.WriteLine("\nSe ordenaron "+sortedNums.Count+" números");
+                        Console.WriteLine("\nEl proceso de ordenamiento se completo en: " + elapsedMs1 +" milisegundos");
+
+                        set_up_data(sortedNums);
+                        break;
+                    case 2:
+                        //quick sort 
+                        var watch2 = System.Diagnostics.Stopwatch.StartNew();
+                            sortedNums = execute_quick_sort(unsortedNums);
+                        watch2.Stop();
+
+                        var elapsedMs2 = watch2.ElapsedMilliseconds;
+                        Console.WriteLine("\nSe ordenaron " + sortedNums.Count + " números");
+                        Console.WriteLine("\nEl proceso de ordenamiento se completo en: " + elapsedMs2 + " milisegundos");
+
+                        set_up_data(sortedNums);
+                        break;
+                    case 3:
+                        //heap sort
+                        var watch3 = System.Diagnostics.Stopwatch.StartNew();
+                            sortedNums = execute_heap_sort(unsortedArr);
+                        watch3.Stop();
+
+                        var elapsedMs3 = watch3.ElapsedMilliseconds;
+                        Console.WriteLine("\nSe ordenaron " + sortedNums.Count + " números");
+                        Console.WriteLine("\nEl proceso de ordenamiento se completo en: " + elapsedMs3 + " milisegundos");
+
+                        set_up_data(sortedNums);
+                        break;
+                    default:
+                        Console.WriteLine("Se ingresó una opción no válida");
+                        break;
+                }
             }
             else
             {
@@ -143,9 +183,18 @@ namespace SortMethod
                     writer.Write(builder);
                 }
             }
-            Console.WriteLine("Se creo el archivo sorted_numbers.txt en el escritorio del equipo con los numeros ordenados");
+            Console.WriteLine("\nSe creo el archivo sorted_numbers.txt en el escritorio del equipo con los numeros ordenados");
         }
 
+        public void get_perfomance_data()
+        {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            // the code that you want to measure comes here
+            watch.Stop();
+            var elapsedMs = watch.ElapsedMilliseconds;
+        }
+
+        #region Sort Methods
         public List<int> execute_merge_sort(List<int> unsorted)
         {
             if (unsorted.Count <= 1)
@@ -203,5 +252,118 @@ namespace SortMethod
             }
             return result;
         }
+
+        public List<int> execute_quick_sort(List<int> list)
+        {
+            if (list.Count <= 1) return list;
+            int pivotPosition = list.Count / 2;
+            int pivotValue = list[pivotPosition];
+            list.RemoveAt(pivotPosition);
+
+            List<int> smaller = new List<int>();
+            List<int> greater = new List<int>();
+
+            foreach (int item in list)
+            {
+                if (item < pivotValue)
+                {
+                    smaller.Add(item);
+                }
+                else
+                {
+                    greater.Add(item);
+                }
+            }
+
+            List<int> sorted = execute_quick_sort(smaller);
+            sorted.Add(pivotValue);
+            sorted.AddRange(execute_quick_sort(greater));
+
+            return sorted;
+        }
+
+        public List<int> execute_heap_sort(int[] array)
+        {
+            int heapSize = array.Length;
+
+            buildMaxHeap(array);
+
+            for (int i = heapSize - 1; i >= 1; i--)
+            {
+                swap(array, i, 0);
+                heapSize--;
+                sink(array, heapSize, 0);
+            }
+
+            List<int> result = new List<int>(array);
+            return result;
+        }
+
+        private static void buildMaxHeap<T>(T[] array) where T : IComparable<T>
+        {
+            int heapSize = array.Length;
+
+            for (int i = (heapSize / 2) - 1; i >= 0; i--)
+            {
+                sink(array, heapSize, i);
+            }
+        }
+
+        private static void sink<T>(T[] array, int heapSize, int toSinkPos) where T : IComparable<T>
+        {
+            if (getLeftKidPos(toSinkPos) >= heapSize)
+            {
+                // No left kid => no kid at all
+                return;
+            }
+
+            int largestKidPos;
+            bool leftIsLargest;
+
+            if (getRightKidPos(toSinkPos) >= heapSize || array[getRightKidPos(toSinkPos)].CompareTo(array[getLeftKidPos(toSinkPos)]) < 0)
+            {
+                largestKidPos = getLeftKidPos(toSinkPos);
+                leftIsLargest = true;
+            }
+            else
+            {
+                largestKidPos = getRightKidPos(toSinkPos);
+                leftIsLargest = false;
+            }
+
+            if (array[largestKidPos].CompareTo(array[toSinkPos]) > 0)
+            {
+                swap(array, toSinkPos, largestKidPos);
+
+                if (leftIsLargest)
+                {
+                    sink(array, heapSize, getLeftKidPos(toSinkPos));
+
+                }
+                else
+                {
+                    sink(array, heapSize, getRightKidPos(toSinkPos));
+                }
+            }
+
+        }
+
+        private static void swap<T>(T[] array, int pos0, int pos1)
+        {
+            T tmpVal = array[pos0];
+            array[pos0] = array[pos1];
+            array[pos1] = tmpVal;
+        }
+
+        private static int getLeftKidPos(int parentPos)
+        {
+            return (2 * (parentPos + 1)) - 1;
+        }
+
+        private static int getRightKidPos(int parentPos)
+        {
+            return 2 * (parentPos + 1);
+        }
+        #endregion
     }
 }

@@ -13,10 +13,13 @@ namespace SortMethod
             Console.WriteLine("Ingresa la cantidad de numeros aleatorios a generar");
             var cant = Console.ReadLine();
 
-            if (IsNumeric(cant))
+            Console.WriteLine("\nIngresa la opción de ordenamiento: 1-Merge Sort  2-Quick Sort  3-Heap Sort");
+            var opt = Console.ReadLine();
+
+            if (IsNumeric(cant) && IsNumeric(opt))
             {
                 Sort file = new Sort();
-                file.create_file(Convert.ToInt32(cant));
+                file.create_file(Convert.ToInt32(cant),Convert.ToInt32(opt));
             }
 
             bool IsNumeric(string line)
